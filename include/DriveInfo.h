@@ -4,6 +4,7 @@
 #include <assert.h>
 #include <Windows.h>
 #include <iostream>
+#include <algorithm>
 
 class DriveInfo
 {
@@ -16,6 +17,7 @@ public:
         initDosDevice();
         initFreeSpaceInfo();
         initDriveType();
+        initVolumeInfo();
     };
 
     std::string dosDeviceName()const {return dasDevice;}
@@ -37,8 +39,17 @@ public:
     };
     DriveType driveType()const {return drive_t; }
 
+    struct VolumeInfo {
+        std::string volName;
+        DWORD volumeSerialNumber;
+        DWORD maximumComponentLength;
+        DWORD fileSystemFlags;
+        std::string fileSysName;
+    };
+    VolumeInfo const& volumeInfo()const {return vi;}
+
 private:
-    char drivePath[3]; // e.g. "A:"
+    char drivePath[4]; // e.g. "A:"
 
     DiscSpaceInfo dsi = {};
 
@@ -46,13 +57,22 @@ private:
 
     DriveType drive_t;
 
+    VolumeInfo vi;
+
     void initDosDevice()
     {
         dasDevice.resize(100);
-        DWORD charsWritten;
-        while ((charsWritten = QueryDosDeviceA(drivePath, &*dasDevice.begin(), dasDevice.size())) == 0 && ERROR_INSUFFICIENT_BUFFER == GetLastError())
+        long long charsWritten;
+        char dosDrive[3] = {drivePath[0], ':'};
+        while ((charsWritten = QueryDosDeviceA(dosDrive, &*dasDevice.begin(), dasDevice.size())) == 0 && ERROR_INSUFFICIENT_BUFFER == GetLastError())
             dasDevice.resize(dasDevice.size() * 2);
-        dasDevice.resize(charsWritten - 2);
+        if (charsWritten > 2)
+            dasDevice.resize(static_cast<size_t>(charsWritten - 2));
+        else {
+            std::cerr << "QueryDosDeviceA failed w/e " << GetLastError() << "\n";
+            dasDevice.resize(0);
+        }
+
     }
 
     void initFreeSpaceInfo()
@@ -69,5 +89,25 @@ private:
     void initDriveType()
     {
         drive_t = static_cast<DriveType>(GetDriveTypeA(drivePath));
+    }
+
+    void initVolumeInfo()
+    {
+        vi.volName.resize(MAX_PATH + 1, '\0');
+        vi.fileSysName.resize(MAX_PATH + 1, '\0');
+        BOOL res = GetVolumeInformationA(
+                       drivePath,
+                       &*vi.volName.begin(),
+                       vi.volName.size(),
+                       &vi.volumeSerialNumber,
+                       &vi.maximumComponentLength,
+                       &vi.fileSystemFlags,
+                       &*vi.fileSysName.begin(),
+                       vi.fileSysName.size()
+                   );
+        if (res == FALSE)
+            std::cerr << "GetVolumeInformationA failed w/e " << GetLastError() << "\n";
+        vi.volName.resize(vi.volName.find('\0'));
+        vi.fileSysName.resize(vi.fileSysName.find('\0'));
     }
 };

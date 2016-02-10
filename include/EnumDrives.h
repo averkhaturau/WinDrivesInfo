@@ -19,7 +19,7 @@ unsigned char log2(unsigned long v)
 
 void enumDrives(std::function<void(const char*)> fn)
 {
-    char szDrive[] = "A:";
+    char szDrive[] = "A:\\";
     DWORD uDriveMask = GetLogicalDrives();
     while (uDriveMask) {
         DWORD uDriveMask_1 = uDriveMask - 1;
