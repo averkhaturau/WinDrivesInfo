@@ -1,0 +1,19 @@
+call astyle ^
+--suffix=none ^
+--style=kr ^
+--indent=spaces=4 ^
+--min-conditional-indent=0 ^
+--indent-switches ^
+--indent-namespaces ^
+--indent-col1-comments ^
+--keep-one-line-blocks ^
+--keep-one-line-statements ^
+--pad-oper ^
+--align-pointer=type ^
+--align-reference=type ^
+--convert-tabs ^
+--ignore-exclude-errors ^
+--lineend=windows ^
+--preserve-date ^
+--formatted ^
+--recursive "*.cpp" "*.h"
