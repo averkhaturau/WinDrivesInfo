@@ -30,9 +30,9 @@ std::string to_string(DriveInfo::VolumeInfo const& vi)
     std::stringstream result;
     result <<
            vi.volName << "\t" <<
-           vi.volumeSerialNumber << "\t" <<
+           "S/N:" << vi.volumeSerialNumber << "\t" <<
            vi.maximumComponentLength << "\t" <<
-           vi.fileSysName << "\t" <<
+           "fs: " << vi.fileSysName << "\t" <<
            vi.fileSystemFlags;
 
     return result.str();

@@ -18,6 +18,8 @@ public:
         initFreeSpaceInfo();
         initDriveType();
         initVolumeInfo();
+
+        initDriveHandle();
     };
 
     std::string dosDeviceName()const {return dasDevice;}
@@ -49,7 +51,9 @@ public:
     VolumeInfo const& volumeInfo()const {return vi;}
 
 private:
-    char drivePath[4]; // e.g. "A:"
+    char drivePath[4]; // e.g. "A:\\"
+
+    HANDLE driveHandle = INVALID_HANDLE_VALUE;
 
     DiscSpaceInfo dsi = {};
 
@@ -109,5 +113,19 @@ private:
             std::cerr << "GetVolumeInformationA failed w/e " << GetLastError() << "\n";
         vi.volName.resize(vi.volName.find('\0'));
         vi.fileSysName.resize(vi.fileSysName.find('\0'));
+    }
+
+    void initDriveHandle()
+    {
+        const char uncDrive[7] = {'\\', '\\', '.', '\\', drivePath[0], ':'};
+        driveHandle = CreateFileA(uncDrive,
+                                  GENERIC_READ | GENERIC_WRITE,
+                                  FILE_SHARE_READ | FILE_SHARE_WRITE,
+                                  NULL,
+                                  OPEN_EXISTING,
+                                  FILE_ATTRIBUTE_NORMAL,
+                                  NULL);
+        if (driveHandle == INVALID_HANDLE_VALUE)
+            std::cerr << "CreateFile failed w/e " << GetLastError() << "\n";
     }
 };
